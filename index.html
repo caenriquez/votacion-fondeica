@@ -4,113 +4,48 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Votación FONDEICA</title>
-  <style>
-    body{font-family:Arial;max-width:720px;margin:30px auto;padding:0 14px}
-    .card{border:1px solid #ddd;border-radius:10px;padding:14px;margin:10px 0}
-    input{width:100%;padding:10px;margin:6px 0;border:1px solid #ccc;border-radius:8px}
-    button{padding:10px 12px;border:0;border-radius:8px;cursor:pointer}
-    .btn{background:#0a7; color:#fff}
-    .btn2{background:#06c; color:#fff}
-    .hidden{display:none}
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <h2>Votación FONDEICA</h2>
-
-  <div class="card">
-    <label>Ingrese su Nombre y Apellido:</label>
-    <input id="nombre" placeholder="Ej: Carlos Caicedo" />
-
-    <label>Ingrese su cédula:</label>
-    <input id="cedula" placeholder="Ej: 123456789" inputmode="numeric" />
-
-    <button class="btn" id="btnIngresar">Ingresar</button>
-    <p id="msg"></p>
-  </div>
-
-  <div class="card hidden" id="panelCandidatos">
-    <h3>Candidatos</h3>
+  <div class="container">
+    <h1>Votación FONDEICA</h1>
 
     <div class="card">
-      <b>Luis Enrique Sinisterra</b><br />
-      <button class="btn2" onclick="votar('Luis Enrique Sinisterra')">Votar</button>
+      <label>Ingrese su Nombre y Apellido:</label>
+      <input id="nombre" placeholder="Ej: Carlos Caicedo" />
+
+      <label>Ingrese su cédula:</label>
+      <input id="cedula" placeholder="Ej: 1087200716" inputmode="numeric" />
+
+      <button id="btnIngresar" class="btn btn-primary">Ingresar</button>
+      <p id="msg" class="msg"></p>
     </div>
 
-    <div class="card">
-      <b>Cristian Arvey Enriquez</b><br />
-      <button class="btn2" onclick="votar('Cristian Arvey Enriquez')">Votar</button>
+    <div class="card hidden" id="panelCandidatos">
+      <h2>Candidatos</h2>
+
+      <div class="candidate">
+        <div>
+          <b>Luis Enrique Sinisterra</b>
+        </div>
+        <button class="btn btn-vote" data-candidato="Luis Enrique Sinisterra">Votar</button>
+      </div>
+
+      <div class="candidate">
+        <div>
+          <b>Cristian Arvey Enriquez</b>
+        </div>
+        <button class="btn btn-vote" data-candidato="Cristian Arvey Enriquez">Votar</button>
+      </div>
+    </div>
+
+    <div class="footer">
+      <small>© Votación FONDEICA</small>
     </div>
   </div>
 
-  <!-- Firebase SDK (v9 modular) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
-
-    // 1) Pega aquí tu config de Firebase
-    const firebaseConfig = {
-      apiKey: "TU_API_KEY",
-      authDomain: "TU_PROYECTO.firebaseapp.com",
-      projectId: "TU_PROYECTO",
-      appId: "TU_APP_ID"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const functions = getFunctions(app, "us-central1");
-
-    const msg = document.getElementById("msg");
-    const panel = document.getElementById("panelCandidatos");
-    const btnIngresar = document.getElementById("btnIngresar");
-
-    let usuario = { nombre: "", cedula: "" };
-
-    btnIngresar.addEventListener("click", () => {
-      const nombre = document.getElementById("nombre").value.trim();
-      const cedula = document.getElementById("cedula").value.trim();
-
-      if (!nombre || !cedula) {
-        msg.textContent = "Por favor complete nombre y cédula.";
-        return;
-      }
-      usuario = { nombre, cedula };
-      msg.textContent = "Listo. Ahora seleccione su candidato.";
-      panel.classList.remove("hidden");
-    });
-
-    window.votar = async (candidato) => {
-      try {
-        if (!usuario.nombre || !usuario.cedula) return;
-
-        // Guarda intento (opcional). Lo ideal es que la validación real sea en Cloud Function.
-        await addDoc(collection(db, "votos_intentos"), {
-          nombre: usuario.nombre,
-          candidato,
-          createdAt: serverTimestamp()
-        });
-
-        // Llama Cloud Function (valida 1 voto por cédula + envía correo)
-        const votarFn = httpsCallable(functions, "registrarVoto");
-        const res = await votarFn({
-          nombre: usuario.nombre,
-          cedula: usuario.cedula,
-          candidato
-        });
-
-        msg.textContent = res.data?.message || "Voto registrado.";
-
-        // WhatsApp: se abre con mensaje prellenado (usuario debe enviar)
-        const numeroWhats = "57XXXXXXXXXX"; // <-- cambia
-        const texto = encodeURIComponent(`Yo ${usuario.nombre}, voto por el señor ${candidato}.`);
-        window.open(`https://wa.me/${numeroWhats}?text=${texto}`, "_blank");
-
-        panel.classList.add("hidden");
-      } catch (e) {
-        console.error(e);
-        msg.textContent = e?.message || "Error registrando el voto.";
-      }
-    };
-  </script>
+  <!-- Firebase (v10) -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>
