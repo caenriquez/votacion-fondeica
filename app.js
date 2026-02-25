@@ -2,11 +2,11 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getFirestore,
   doc,
-  runTransaction,
+  setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// TU firebaseConfig REAL (ya pegado)
+// TU firebaseConfig REAL
 const firebaseConfig = {
   apiKey: "AIzaSyDLSUgajTAG3aPEir4J7sBraZfLMHnDMU4",
   authDomain: "votacion-fondeica.firebaseapp.com",
@@ -16,14 +16,13 @@ const firebaseConfig = {
   appId: "1:150233243736:web:2be9dd6e4c050561c9ea2d"
 };
 
-// CAMBIA ESTO: número destino WhatsApp (sin +, sin espacios)
+// CAMBIA ESTO: WhatsApp destino (sin +, sin espacios)
 const WHATSAPP_DESTINO = "57XXXXXXXXXX";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const $ = (id) => document.getElementById(id);
-
 const msg = $("msg");
 const panel = $("panelCandidatos");
 const btnIngresar = $("btnIngresar");
@@ -33,34 +32,25 @@ let usuario = { nombre: "", cedula: "" };
 function normalizarCedula(value) {
   return String(value || "").replace(/\D/g, "").trim();
 }
-
 function normalizarNombre(value) {
   return String(value || "").trim();
 }
 
-// 1 voto por cédula (docId = cedula)
+// 1 voto por cédula (sin leer). Si ya existe, será UPDATE y Rules lo bloquea.
 async function registrarVoto({ nombre, cedula, candidato }) {
   const ref = doc(db, "votos", cedula);
 
-  await runTransaction(db, async (tx) => {
-    const snap = await tx.get(ref);
-    if (snap.exists()) {
-      throw new Error("Esta cédula ya registró un voto.");
-    }
-
-    tx.set(ref, {
-      nombre,
-      cedula,
-      candidato,
-      createdAt: serverTimestamp()
-    });
+  await setDoc(ref, {
+    nombre,
+    cedula,
+    candidato,
+    createdAt: serverTimestamp()
   });
 }
 
 function abrirWhatsApp(nombre, candidato) {
   const texto = encodeURIComponent(`Yo ${nombre}, voto por el señor ${candidato}.`);
-  const url = `https://wa.me/${WHATSAPP_DESTINO}?text=${texto}`;
-  window.open(url, "_blank");
+  window.open(`https://wa.me/${WHATSAPP_DESTINO}?text=${texto}`, "_blank");
 }
 
 // Ingresar
@@ -87,12 +77,6 @@ document.addEventListener("click", async (e) => {
 
   const candidato = btn.getAttribute("data-candidato");
 
-  if (!usuario.nombre || !usuario.cedula) {
-    msg.textContent = "Primero ingrese Nombre y Cédula.";
-    msg.style.color = "#b42318";
-    return;
-  }
-
   try {
     btn.disabled = true;
     btn.textContent = "Registrando...";
@@ -107,10 +91,10 @@ document.addEventListener("click", async (e) => {
     msg.style.color = "#067647";
 
     abrirWhatsApp(usuario.nombre, candidato);
-
     panel.classList.add("hidden");
   } catch (err) {
-    msg.textContent = `❌ ${err.message || "No se pudo registrar el voto."}`;
+    // Cuando ya votó, el segundo intento es UPDATE y Rules lo bloquea -> permission denied
+    msg.textContent = "❌ Esta cédula ya registró un voto (o permisos bloqueados).";
     msg.style.color = "#b42318";
   } finally {
     btn.disabled = false;
