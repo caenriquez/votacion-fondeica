@@ -13,13 +13,8 @@ body {
   padding: 0 14px;
 }
 
-h1 {
-  margin: 0 0 16px 0;
-}
-
-h2 {
-  margin: 0 0 10px 0;
-}
+h1 { margin: 0 0 16px 0; }
+h2 { margin: 0 0 10px 0; }
 
 .card {
   background: #fff;
@@ -44,9 +39,7 @@ input {
   outline: none;
 }
 
-input:focus {
-  border-color: #5b8cff;
-}
+input:focus { border-color: #5b8cff; }
 
 .btn {
   border: none;
@@ -61,28 +54,16 @@ input:focus {
   background: #12a36a;
   color: #fff;
 }
-
-.btn-primary:hover {
-  filter: brightness(.95);
-}
+.btn-primary:hover { filter: brightness(.95); }
 
 .btn-vote {
   background: #0b61ff;
   color: #fff;
 }
+.btn-vote:hover { filter: brightness(.95); }
 
-.btn-vote:hover {
-  filter: brightness(.95);
-}
-
-.msg {
-  margin-top: 10px;
-  font-weight: 700;
-}
-
-.hidden {
-  display: none;
-}
+.msg { margin-top: 10px; font-weight: 700; }
+.hidden { display: none; }
 
 .candidate {
   display: flex;
@@ -94,7 +75,4 @@ input:focus {
   margin: 10px 0;
 }
 
-.footer {
-  margin-top: 14px;
-  color: #6b7280;
-}
+.footer { margin-top: 14px; color: #6b7280; }
