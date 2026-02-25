@@ -6,24 +6,18 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/**
- * ========= PASO 1: PEGA AQUÍ TU firebaseConfig REAL (CAMBIAR) =========
- * Firebase Console -> Project settings -> Your apps -> Web app -> firebaseConfig
- */
+// TU firebaseConfig REAL (ya pegado)
 const firebaseConfig = {
-  apiKey: "CAMBIAR",
-  authDomain: "CAMBIAR",
-  projectId: "CAMBIAR",
-  storageBucket: "CAMBIAR",
-  messagingSenderId: "CAMBIAR",
-  appId: "CAMBIAR"
+  apiKey: "AIzaSyDLSUgajTAG3aPEir4J7sBraZfLMHnDMU4",
+  authDomain: "votacion-fondeica.firebaseapp.com",
+  projectId: "votacion-fondeica",
+  storageBucket: "votacion-fondeica.firebasestorage.app",
+  messagingSenderId: "150233243736",
+  appId: "1:150233243736:web:2be9dd6e4c050561c9ea2d"
 };
 
-/**
- * ========= PASO 2: PON AQUÍ EL WHATSAPP DESTINO (CAMBIAR) =========
- * Ej: "57XXXXXXXXXX" (sin +, sin espacios)
- */
-const WHATSAPP_DESTINO = "57XXXXXXXXXX"; // CAMBIAR
+// CAMBIA ESTO: número destino WhatsApp (sin +, sin espacios)
+const WHATSAPP_DESTINO = "57XXXXXXXXXX";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -44,16 +38,12 @@ function normalizarNombre(value) {
   return String(value || "").trim();
 }
 
-/**
- * Guardar 1 voto por cédula en Firestore usando el docId = cedula
- * Esto evita duplicados (si intenta votar de nuevo, se bloquea).
- */
+// 1 voto por cédula (docId = cedula)
 async function registrarVoto({ nombre, cedula, candidato }) {
   const ref = doc(db, "votos", cedula);
 
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
-
     if (snap.exists()) {
       throw new Error("Esta cédula ya registró un voto.");
     }
@@ -68,7 +58,6 @@ async function registrarVoto({ nombre, cedula, candidato }) {
 }
 
 function abrirWhatsApp(nombre, candidato) {
-  // Mensaje ejemplo: "Yo Carlos Caicedo, voto por el señor Luis Enrique Sinisterra."
   const texto = encodeURIComponent(`Yo ${nombre}, voto por el señor ${candidato}.`);
   const url = `https://wa.me/${WHATSAPP_DESTINO}?text=${texto}`;
   window.open(url, "_blank");
@@ -91,7 +80,7 @@ btnIngresar.addEventListener("click", () => {
   panel.classList.remove("hidden");
 });
 
-// Votar (botones)
+// Votar
 document.addEventListener("click", async (e) => {
   const btn = e.target.closest(".btn-vote");
   if (!btn) return;
@@ -117,7 +106,6 @@ document.addEventListener("click", async (e) => {
     msg.textContent = "✅ Voto registrado correctamente.";
     msg.style.color = "#067647";
 
-    // Abre WhatsApp con mensaje prellenado (usuario confirma Enviar)
     abrirWhatsApp(usuario.nombre, candidato);
 
     panel.classList.add("hidden");
