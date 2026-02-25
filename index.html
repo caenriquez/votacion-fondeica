@@ -11,9 +11,10 @@
   <div class="container">
     <h1>Votación FONDEICA</h1>
 
-    <div class="card">
+    <!-- PASO 1: Ingreso -->
+    <div class="card" id="panelIngreso">
       <label>Ingrese su Nombre y Apellido:</label>
-      <input id="nombre" placeholder="Ej: Carlos Caicedo" />
+      <input id="nombre" placeholder="Ej: Juan Carlos Figueroa" />
 
       <label>Ingrese su cédula:</label>
       <input id="cedula" placeholder="Ej: 1087200716" inputmode="numeric" />
@@ -22,6 +23,7 @@
       <p id="msg" class="msg"></p>
     </div>
 
+    <!-- PASO 2: Candidatos -->
     <div class="card hidden" id="panelCandidatos">
       <h2>Candidatos</h2>
 
@@ -36,10 +38,35 @@
       </div>
     </div>
 
+    <!-- PASO 3: Ticket -->
+    <div class="card hidden" id="panelTicket">
+      <h2>Ticket de votación</h2>
+
+      <div id="ticketBox" class="ticket">
+        <div class="ticket-title">COMPROBANTE</div>
+        <div class="ticket-row"><span>Ticket:</span> <b id="tTicket"></b></div>
+        <div class="ticket-row"><span>Fecha:</span> <b id="tFecha"></b></div>
+        <hr />
+        <div class="ticket-big" id="tTexto"></div>
+        <div class="ticket-small" id="tCedulaMask"></div>
+      </div>
+
+      <div class="actions">
+        <button id="btnCompartirWhats" class="btn btn-vote">Compartir mi voto (WhatsApp)</button>
+        <button id="btnDescargarPDF" class="btn btn-primary">Descargar ticket (PDF)</button>
+        <button id="btnNuevo" class="btn btn-ghost">Nuevo voto</button>
+      </div>
+
+      <p class="note">Se abrirá WhatsApp/WhatsApp Web con el mensaje listo. Solo debes presionar <b>Enviar</b>.</p>
+    </div>
+
     <div class="footer">
       <small>© Votación FONDEICA</small>
     </div>
   </div>
+
+  <!-- Librería para PDF (gratis) -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <script type="module" src="app.js"></script>
 </body>
