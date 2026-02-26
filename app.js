@@ -363,12 +363,18 @@ btnCargarVotos.addEventListener("click", async () => {
           <td>${v.candidato || ""}</td>
           <td>${v.fechaTexto || ""}</td>
           <td>${v.ticketId || ""}</td>
-          <td>
-            <button class="btn btn-ghost btnDel" data-ced="${ced}">Eliminar</button>
-          </td>
+          <td><button class="btn btn-ghost btnDel" data-ced="${ced}">Eliminar</button></td>
         </tr>
       `);
     });
+
+    tablaVotosBody.innerHTML =
+      rowsHtml.length ? rowsHtml.join("") : "<tr><td colspan='6'>Sin votos</td></tr>";
+  } catch (e) {
+    console.error(e);
+    tablaVotosBody.innerHTML = `<tr><td colspan='6'>❌ Error cargando votos: ${e?.code || ""} ${e?.message || e}</td></tr>`;
+  }
+});
 
     tablaVotosBody.innerHTML =
       rowsHtml.length ? rowsHtml.join("") : "<tr><td colspan='6'>Sin votos</td></tr>";
