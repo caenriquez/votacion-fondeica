@@ -174,10 +174,17 @@ document.addEventListener("click", async (e) => {
       ticketId,
       fecha
     });
-  } catch (err) {
-    console.error(err);
-    msg.textContent = "❌ No se pudo registrar el voto (o ya votaste con esa cédula).";
-    msg.style.color = "#b42318";
+ } catch (err) {
+  console.error(err);
+
+  // Cuando ya existe el documento, Firestore bloquea por reglas -> permission-denied
+  msg.textContent = "❌ Esta cédula ya registró un voto. No es posible votar de nuevo.";
+  msg.style.color = "#b42318";
+
+  panelIngreso.classList.remove("hidden");
+  panelCandidatos.classList.add("hidden");
+  panelTicket.classList.add("hidden");
+}
 
     panelIngreso.classList.remove("hidden");
     panelCandidatos.classList.add("hidden");
