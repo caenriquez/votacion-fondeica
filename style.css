@@ -185,3 +185,9 @@ th { background:#f3f4f6; }
 
   table { font-size: 13px; }
 }
+
+/* Forzar que el formulario de ingreso se vea más grande en celular */
+#panelIngreso { 
+  transform: scale(1.15); 
+  transform-origin: top left; 
+}
