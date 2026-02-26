@@ -185,47 +185,37 @@ function downloadCSV(filename, rows) {
   URL.revokeObjectURL(url);
 }
 
-// ====================
-// IMPORTAR AFILIADOS XLSX (MASIVO)
-// ====================
+// ===== Importar afiliados desde Excel (.xlsx) =====
+// Tu Excel viene como: [#, CÉDULA, NOMBRE]
 async function importarAfiliadosDesdeXlsx(file) {
   const data = await file.arrayBuffer();
   const workbook = XLSX.read(data, { type: "array" });
   const sheetName = workbook.SheetNames[0];
   const ws = workbook.Sheets[sheetName];
 
-  // convierte a arrays (incluye encabezados)
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
 
-  // Esperado: columnas tipo [#, CÉDULA, NOMBRE] o [CÉDULA, NOMBRE]
-  // Tomamos cédula/nombre desde la fila 2 en adelante
   let count = 0;
-
-  // Firestore batch: máximo 500 operaciones por batch
   let batch = writeBatch(db);
   let ops = 0;
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    if (!row || row.length < 2) continue;
+    if (!row || row.length < 3) continue;
 
-    // Detectar cédula y nombre:
-    // Si hay 3 columnas: [idx, cedula, nombre]
-    // Si hay 2 columnas: [cedula, nombre]
-    let ced = row.length >= 3 ? row[1] : row[0];
-    let nom = row.length >= 3 ? row[2] : row[1];
-
-    ced = normalizarCedula(ced);
-    nom = String(nom || "").trim();
+    // en tu archivo: row[1]=cedula, row[2]=nombre
+    let ced = normalizarCedula(row[1]);
+    let nom = String(row[2] || "").trim();
 
     if (!ced || !nom) continue;
 
     const ref = doc(db, "afiliados", ced);
     batch.set(ref, { nombre: nom }, { merge: true });
+
     ops++;
     count++;
 
-    if (ops === 450) { // margen seguro
+    if (ops >= 450) {
       await batch.commit();
       batch = writeBatch(db);
       ops = 0;
@@ -236,7 +226,7 @@ async function importarAfiliadosDesdeXlsx(file) {
   return count;
 }
 
-// --- AFILIADO: ingresar por cédula
+// --- Afiliado: ingresar por cédula
 btnBuscar.addEventListener("click", async () => {
   const cedula = normalizarCedula(cedulaInput.value);
   if (!cedula) {
@@ -276,7 +266,7 @@ btnVolver.addEventListener("click", () => {
   mostrarIngreso(false);
 });
 
-// --- VOTAR
+// --- Votar
 document.addEventListener("click", async (e) => {
   const btn = e.target.closest(".btn-vote[data-candidato]");
   if (!btn) return;
@@ -316,7 +306,7 @@ btnNuevo.addEventListener("click", () => {
   mostrarIngreso(true);
 });
 
-// --- ADMIN: login
+// --- Admin: login
 btnAdminLogin.addEventListener("click", async () => {
   adminMsg.textContent = "Ingresando...";
   try {
@@ -334,7 +324,6 @@ btnAdminSalir.addEventListener("click", async () => {
   await signOut(auth);
 });
 
-// Admin: estado
 onAuthStateChanged(auth, (user) => {
   if (user) {
     panelAdminLogin.classList.add("hidden");
@@ -367,7 +356,7 @@ btnImportarAfiliados.addEventListener("click", async () => {
     importMsg.style.color = "#067647";
   } catch (e) {
     console.error(e);
-    importMsg.textContent = "❌ No se pudo importar. Verifica que eres admin (admins/UID) y las Rules.";
+    importMsg.textContent = "❌ No se pudo importar. Verifica admins/UID y Rules.";
     importMsg.style.color = "#b42318";
   }
 });
@@ -396,7 +385,7 @@ btnCargarVotos.addEventListener("click", async () => {
     tablaVotosBody.innerHTML = rows.length ? rows.join("") : "<tr><td colspan='5'>Sin votos</td></tr>";
   } catch (e) {
     console.error(e);
-    tablaVotosBody.innerHTML = "<tr><td colspan='5'>❌ No autorizado. Verifica admins/UID y rules.</td></tr>";
+    tablaVotosBody.innerHTML = "<tr><td colspan='5'>❌ No autorizado. Verifica admins/UID y Rules.</td></tr>";
   }
 });
 
