@@ -25,21 +25,32 @@ h2 { margin: 0 0 10px 0; }
   box-shadow: 0 2px 8px rgba(0,0,0,.04);
 }
 
+.card.mini {
+  margin-top: 12px;
+  box-shadow: none;
+}
+
+.mini-title{
+  margin:0 0 8px 0;
+}
+
 label {
   display: block;
   margin: 10px 0 6px 0;
   font-weight: 600;
 }
 
-input {
+input, textarea {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid #cfd5dd;
   border-radius: 10px;
   outline: none;
+  font-family: inherit;
+  font-size: 14px;
 }
 
-input:focus { border-color: #5b8cff; }
+input:focus, textarea:focus { border-color: #5b8cff; }
 
 .btn {
   border: none;
@@ -115,11 +126,11 @@ input:focus { border-color: #5b8cff; }
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .note {
-  margin-top: 10px;
+  margin: 8px 0 0 0;
   color: #334155;
 }
 
