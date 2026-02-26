@@ -10,14 +10,6 @@ import {
   writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-// Firebase config (tuyo)
 const firebaseConfig = {
   apiKey: "AIzaSyDLSUgajTAG3aPEir4J7sBraZfLMHnDMU4",
   authDomain: "votacion-fondeica.firebaseapp.com",
@@ -30,28 +22,27 @@ const firebaseConfig = {
 // WhatsApp destino fijo
 const WHATSAPP_DESTINO = "573116403643";
 
+// TU CÉDULA RESPONSABLE (la única que verá el panel de control)
+const CEDULA_RESPONSABLE = "1087200716";
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
 
 const $ = (id) => document.getElementById(id);
 
-// Panels
 const panelIngreso = $("panelIngreso");
 const panelCandidatos = $("panelCandidatos");
 const panelTicket = $("panelTicket");
-const panelAdminLogin = $("panelAdminLogin");
-const panelAdmin = $("panelAdmin");
+const panelResponsable = $("panelResponsable");
 
-// Afiliado
 const cedulaInput = $("cedula");
 const btnBuscar = $("btnBuscar");
 const msg = $("msg");
-const boxNombre = $("boxNombre");
-const nombreEncontrado = $("nombreEncontrado");
+
+const saludoTitulo = $("saludoTitulo");
+const saludoTexto = $("saludoTexto");
 const btnVolver = $("btnVolver");
 
-// Ticket
 const tTicket = $("tTicket");
 const tFecha = $("tFecha");
 const tTexto = $("tTexto");
@@ -59,29 +50,21 @@ const tCedulaMask = $("tCedulaMask");
 const previewMsg = $("previewMsg");
 const btnNuevo = $("btnNuevo");
 
-// Admin login
-const adminEmail = $("adminEmail");
-const adminPass = $("adminPass");
-const btnAdminLogin = $("btnAdminLogin");
-const adminMsg = $("adminMsg");
-
-// Admin panel
-const adminUid = $("adminUid");
-const btnCargarVotos = $("btnCargarVotos");
-const btnDescargarVotosCSV = $("btnDescargarVotosCSV");
-const btnAdminSalir = $("btnAdminSalir");
-const tablaVotosBody = $("tablaVotos").querySelector("tbody");
-
-// Import afiliados
+// Responsable
 const fileAfiliados = $("fileAfiliados");
 const btnImportarAfiliados = $("btnImportarAfiliados");
 const importMsg = $("importMsg");
+const btnCargarVotos = $("btnCargarVotos");
+const btnDescargarVotosCSV = $("btnDescargarVotosCSV");
+const tablaVotosBody = $("tablaVotos").querySelector("tbody");
 
 let usuario = { cedula: "", nombre: "" };
 let ticketActual = { id: "", fecha: "", candidato: "" };
 let votosCache = [];
 
-function normalizarCedula(v) { return String(v || "").replace(/\D/g, "").trim(); }
+function normalizarCedula(v) {
+  return String(v || "").replace(/\D/g, "").trim();
+}
 
 function maskCedula(cedula) {
   if (cedula.length <= 4) return "Cédula: ****";
@@ -122,6 +105,7 @@ async function buscarAfiliado(cedula) {
   return snap.data(); // { nombre }
 }
 
+// Voto: docId = cedula (bloquea segundo voto por rules: update false)
 async function registrarVoto({ cedula, nombre, candidato, ticketId, fecha }) {
   const ref = doc(db, "votos", cedula);
   await setDoc(ref, {
@@ -134,7 +118,7 @@ async function registrarVoto({ cedula, nombre, candidato, ticketId, fecha }) {
   });
 }
 
-function mostrarCandidatos() {
+function mostrarPantallaCandidatos() {
   panelIngreso.classList.add("hidden");
   panelTicket.classList.add("hidden");
   panelCandidatos.classList.remove("hidden");
@@ -147,8 +131,7 @@ function mostrarIngreso(reset=false) {
   if (reset) {
     cedulaInput.value = "";
     msg.textContent = "";
-    boxNombre.classList.add("hidden");
-    nombreEncontrado.textContent = "";
+    msg.style.color = "#111";
     usuario = { cedula: "", nombre: "" };
   }
 }
@@ -166,7 +149,6 @@ function mostrarTicket({ candidato, ticketId, fecha }) {
   panelCandidatos.classList.add("hidden");
   panelTicket.classList.remove("hidden");
 
-  // WhatsApp automático
   abrirWhatsApp(mensaje);
 }
 
@@ -185,14 +167,12 @@ function downloadCSV(filename, rows) {
   URL.revokeObjectURL(url);
 }
 
-// ===== Importar afiliados desde Excel (.xlsx) =====
-// Tu Excel viene como: [#, CÉDULA, NOMBRE]
+// Importar afiliados desde Excel (tu archivo: col B = cédula, col C = nombre)
 async function importarAfiliadosDesdeXlsx(file) {
   const data = await file.arrayBuffer();
   const workbook = XLSX.read(data, { type: "array" });
   const sheetName = workbook.SheetNames[0];
   const ws = workbook.Sheets[sheetName];
-
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
 
   let count = 0;
@@ -203,15 +183,11 @@ async function importarAfiliadosDesdeXlsx(file) {
     const row = rows[i];
     if (!row || row.length < 3) continue;
 
-    // en tu archivo: row[1]=cedula, row[2]=nombre
-    let ced = normalizarCedula(row[1]);
-    let nom = String(row[2] || "").trim();
-
+    const ced = normalizarCedula(row[1]); // columna B
+    const nom = String(row[2] || "").trim(); // columna C
     if (!ced || !nom) continue;
 
-    const ref = doc(db, "afiliados", ced);
-    batch.set(ref, { nombre: nom }, { merge: true });
-
+    batch.set(doc(db, "afiliados", ced), { nombre: nom }, { merge: true });
     ops++;
     count++;
 
@@ -226,9 +202,10 @@ async function importarAfiliadosDesdeXlsx(file) {
   return count;
 }
 
-// --- Afiliado: ingresar por cédula
+// ========= FLUJO: INGRESAR =========
 btnBuscar.addEventListener("click", async () => {
   const cedula = normalizarCedula(cedulaInput.value);
+
   if (!cedula) {
     msg.textContent = "Por favor digite su cédula.";
     msg.style.color = "#b42318";
@@ -238,35 +215,39 @@ btnBuscar.addEventListener("click", async () => {
   msg.textContent = "Buscando afiliado...";
   msg.style.color = "#111";
 
-  try {
-    const data = await buscarAfiliado(cedula);
-    if (!data?.nombre) {
-      msg.textContent = "❌ Cédula no registrada en el listado de afiliados.";
-      msg.style.color = "#b42318";
-      boxNombre.classList.add("hidden");
-      return;
-    }
+  const data = await buscarAfiliado(cedula);
 
-    usuario = { cedula, nombre: data.nombre };
-    nombreEncontrado.textContent = data.nombre;
-    boxNombre.classList.remove("hidden");
-
-    msg.textContent = "✅ Afiliado encontrado. Ahora puede votar.";
-    msg.style.color = "#067647";
-
-    mostrarCandidatos();
-  } catch (e) {
-    console.error(e);
-    msg.textContent = "❌ Error consultando afiliados.";
+  if (!data?.nombre) {
+    msg.textContent = "❌ Esta cédula no está registrada en el listado de afiliados. (Primero importa el Excel).";
     msg.style.color = "#b42318";
+    return;
   }
+
+  usuario = { cedula, nombre: data.nombre };
+
+  // Saludo y bienvenida
+  saludoTitulo.textContent = `Hola, ${usuario.nombre} 👋`;
+  saludoTexto.textContent =
+    "Bienvenido(a) a las elecciones para el representante de la 61ª Asamblea Ordinaria de Delegados. " +
+    "Por favor selecciona tu candidato y registra tu voto.";
+
+  // Mostrar panel responsable SOLO si es tu cédula
+  if (cedula === CEDULA_RESPONSABLE) {
+    panelResponsable.classList.remove("hidden");
+  } else {
+    panelResponsable.classList.add("hidden");
+  }
+
+  msg.textContent = "";
+  mostrarPantallaCandidatos();
 });
 
+// Volver
 btnVolver.addEventListener("click", () => {
   mostrarIngreso(false);
 });
 
-// --- Votar
+// ========= VOTAR =========
 document.addEventListener("click", async (e) => {
   const btn = e.target.closest(".btn-vote[data-candidato]");
   if (!btn) return;
@@ -302,47 +283,16 @@ document.addEventListener("click", async (e) => {
   }
 });
 
+// Nuevo voto
 btnNuevo.addEventListener("click", () => {
   mostrarIngreso(true);
 });
 
-// --- Admin: login
-btnAdminLogin.addEventListener("click", async () => {
-  adminMsg.textContent = "Ingresando...";
-  try {
-    await signInWithEmailAndPassword(auth, adminEmail.value.trim(), adminPass.value);
-    adminMsg.textContent = "✅ Sesión iniciada.";
-    adminMsg.style.color = "#067647";
-  } catch (e) {
-    console.error(e);
-    adminMsg.textContent = "❌ No se pudo iniciar sesión (revisa correo/contraseña).";
-    adminMsg.style.color = "#b42318";
-  }
-});
-
-btnAdminSalir.addEventListener("click", async () => {
-  await signOut(auth);
-});
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    panelAdminLogin.classList.add("hidden");
-    panelAdmin.classList.remove("hidden");
-    adminUid.textContent = user.uid;
-  } else {
-    panelAdmin.classList.add("hidden");
-    panelAdminLogin.classList.remove("hidden");
-    adminUid.textContent = "";
-    tablaVotosBody.innerHTML = "";
-    votosCache = [];
-    importMsg.textContent = "";
-  }
-});
-
-// Admin: importar afiliados
+// ========= PANEL RESPONSABLE =========
+// Importar afiliados
 btnImportarAfiliados.addEventListener("click", async () => {
   if (!fileAfiliados.files || !fileAfiliados.files[0]) {
-    importMsg.textContent = "❌ Seleccione un archivo .xlsx primero.";
+    importMsg.textContent = "❌ Seleccione el archivo Excel (.xlsx) primero.";
     importMsg.style.color = "#b42318";
     return;
   }
@@ -356,12 +306,12 @@ btnImportarAfiliados.addEventListener("click", async () => {
     importMsg.style.color = "#067647";
   } catch (e) {
     console.error(e);
-    importMsg.textContent = "❌ No se pudo importar. Verifica admins/UID y Rules.";
+    importMsg.textContent = "❌ No se pudo importar. Revisa las Rules de Firestore.";
     importMsg.style.color = "#b42318";
   }
 });
 
-// Admin: cargar votos
+// Ver votos
 btnCargarVotos.addEventListener("click", async () => {
   tablaVotosBody.innerHTML = "<tr><td colspan='5'>Cargando...</td></tr>";
   votosCache = [];
@@ -382,14 +332,15 @@ btnCargarVotos.addEventListener("click", async () => {
         </tr>
       `);
     });
+
     tablaVotosBody.innerHTML = rows.length ? rows.join("") : "<tr><td colspan='5'>Sin votos</td></tr>";
   } catch (e) {
     console.error(e);
-    tablaVotosBody.innerHTML = "<tr><td colspan='5'>❌ No autorizado. Verifica admins/UID y Rules.</td></tr>";
+    tablaVotosBody.innerHTML = "<tr><td colspan='5'>❌ No se pudieron cargar los votos.</td></tr>";
   }
 });
 
-// Admin: descargar votos CSV (Excel)
+// Descargar votos CSV (Excel)
 btnDescargarVotosCSV.addEventListener("click", () => {
   const rows = [
     ["Cedula", "Nombre", "Candidato", "Fecha", "Ticket"],
