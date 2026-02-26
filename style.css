@@ -191,3 +191,77 @@ th { background:#f3f4f6; }
   transform: scale(1.15); 
   transform-origin: top left; 
 }
+/* ==========================
+   MODO CELULAR: TODO GRANDE
+   ========================== */
+@media (max-width: 900px) {
+
+  body {
+    font-size: 22px;              /* tamaño base */
+  }
+
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 18px;
+  }
+
+  h1 {
+    font-size: 34px;
+    text-align: center;
+    margin: 18px 0 12px 0;
+  }
+
+  h2 {
+    font-size: 28px;
+  }
+
+  label {
+    font-size: 20px;
+  }
+
+  /* tarjetas más grandes */
+  .card {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  /* inputs y textarea grandes */
+  input, textarea {
+    font-size: 22px;
+    padding: 18px 18px;
+    border-radius: 14px;
+  }
+
+  /* botones grandes y a todo ancho */
+  .btn {
+    width: 100%;
+    font-size: 22px;
+    padding: 18px 18px;
+    border-radius: 14px;
+  }
+
+  /* candidatos: apilar y botón grande */
+  .candidate {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 18px;
+  }
+
+  /* ticket y texto grande */
+  .ticket-big {
+    font-size: 24px;
+  }
+
+  /* acciones en columna */
+  .actions {
+    flex-direction: column;
+  }
+
+  /* tabla más legible */
+  table {
+    font-size: 16px;
+  }
+}
+
