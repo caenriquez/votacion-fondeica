@@ -9,7 +9,7 @@ const firebaseConfig = {
 };
 
 // ✅ CAMBIA AQUÍ EL WHATSAPP DESTINO (57 + número)
-const WHATSAPP_DESTINO = "573116403643";
+const WHATSAPP_DESTINO = "573113530039";
 
 // ✅ cédula responsable
 const CEDULA_RESPONSABLE = "1087200716";
