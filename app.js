@@ -1,4 +1,4 @@
-// ===== Firebase config =====
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDLSUgajTAG3aPEir4J7sBraZfLMHnDMU4",
   authDomain: "votacion-fondeica.firebaseapp.com",
@@ -8,17 +8,16 @@ const firebaseConfig = {
   appId: "1:150233243736:web:2be9dd6e4c050561c9ea2d"
 };
 
-// ✅ CAMBIA AQUÍ el WhatsApp destino (57 + número, sin +)
+// ✅ CAMBIA AQUÍ EL WHATSAPP DESTINO (57 + número)
 const WHATSAPP_DESTINO = "573116403643";
 
-// ✅ Tu cédula responsable
+// ✅ cédula responsable
 const CEDULA_RESPONSABLE = "1087200716";
 
 // Init Firebase (compat)
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Helpers
 const $ = (id) => document.getElementById(id);
 const normalizarCedula = (v) => String(v || "").replace(/\D/g, "").trim();
 
@@ -40,20 +39,19 @@ function fechaBonita() {
   return new Date().toLocaleString("es-CO", { dateStyle: "medium", timeStyle: "short" });
 }
 
-function construirMensajeWhats(nombre, cedula, candidato, fecha) {
+// ✅ MENSAJE SIN FECHA (como pediste)
+function construirMensajeWhats(nombre, cedula, candidato) {
   return (
     "Cordial saludo.\n" +
     `Yo ${nombre}, identificado(a) con cédula de ciudadanía ${cedula}, ` +
     `voto por ${candidato} como representante para la 61ª Asamblea Ordinaria de Delegados, ` +
-    "a realizarse el 14 de marzo de 2026.\n" +
-    `Atentamente`
+    "a realizarse el 14 de marzo de 2026."
   );
 }
 
 function abrirWhatsApp(textoPlano) {
   const texto = encodeURIComponent(textoPlano);
   const url = `https://wa.me/${WHATSAPP_DESTINO}?text=${texto}`;
-  // En móvil, mejor en la misma pestaña
   const esMovil = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   if (esMovil) window.location.href = url;
   else window.open(url, "_blank");
@@ -74,7 +72,7 @@ function downloadCSV(filename, rows) {
   URL.revokeObjectURL(url);
 }
 
-// DOM refs
+// DOM
 const panelIngreso = $("panelIngreso");
 const panelCandidatos = $("panelCandidatos");
 const panelTicket = $("panelTicket");
@@ -105,11 +103,11 @@ const tablaVotosBody = $("tablaVotos").querySelector("tbody");
 let usuario = { cedula: "", nombre: "" };
 let votosCache = [];
 
-// Firestore ops
+// Firestore
 async function buscarAfiliado(cedula) {
   const snap = await db.collection("afiliados").doc(cedula).get();
   if (!snap.exists) return null;
-  return snap.data(); // { nombre }
+  return snap.data();
 }
 
 async function registrarVoto({ cedula, nombre, candidato, ticketId, fecha }) {
@@ -129,7 +127,6 @@ async function importarAfiliadosDesdeXlsx(file) {
   const ws = workbook.Sheets[workbook.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
 
-  // Batch en compat: usamos batch normal (500 max)
   let count = 0;
   let batch = db.batch();
   let ops = 0;
@@ -174,13 +171,13 @@ function mostrarIngreso(reset = false) {
   }
 }
 
-function mostrarTicket({ candidato, ticketId, fecha }) {
+function mostrarTicket(candidato, ticketId, fecha) {
   tTicket.textContent = ticketId;
   tFecha.textContent = fecha;
   tTexto.textContent = `Yo ${usuario.nombre}, voté por ${candidato}.`;
   tCedulaMask.textContent = maskCedula(usuario.cedula);
 
-  const mensaje = construirMensajeWhats(usuario.nombre, usuario.cedula, candidato, fecha);
+  const mensaje = construirMensajeWhats(usuario.nombre, usuario.cedula, candidato);
   previewMsg.value = mensaje;
 
   panelIngreso.classList.add("hidden");
@@ -190,7 +187,7 @@ function mostrarTicket({ candidato, ticketId, fecha }) {
   abrirWhatsApp(mensaje);
 }
 
-// Eventos
+// Ingresar
 btnBuscar.addEventListener("click", async () => {
   const cedula = normalizarCedula(cedulaInput.value);
 
@@ -200,14 +197,10 @@ btnBuscar.addEventListener("click", async () => {
     return;
   }
 
-  // Responsable entra siempre
   if (cedula === CEDULA_RESPONSABLE) {
     usuario = { cedula, nombre: "Cristian (Responsable)" };
-
     saludoTitulo.textContent = "Hola, Cristian 👋";
-    saludoTexto.textContent =
-      "Bienvenido(a). Puedes importar afiliados, revisar votos y también votar.";
-
+    saludoTexto.textContent = "Bienvenido(a). Puedes importar afiliados, revisar votos y también votar.";
     panelResponsable.classList.remove("hidden");
     msg.textContent = "";
     mostrarPanelCandidatos();
@@ -226,12 +219,8 @@ btnBuscar.addEventListener("click", async () => {
     }
 
     usuario = { cedula, nombre: data.nombre };
-
     saludoTitulo.textContent = `Hola, ${usuario.nombre} 👋`;
-    saludoTexto.textContent =
-      "Bienvenido(a) a las elecciones para el representante de la 61ª Asamblea Ordinaria de Delegados. " +
-      "Selecciona tu candidato y registra tu voto.";
-
+    saludoTexto.textContent = "Bienvenido(a). Selecciona tu candidato y registra tu voto.";
     panelResponsable.classList.add("hidden");
     msg.textContent = "";
     mostrarPanelCandidatos();
@@ -244,6 +233,7 @@ btnBuscar.addEventListener("click", async () => {
 
 btnVolver.addEventListener("click", () => mostrarIngreso(false));
 
+// Votar
 document.addEventListener("click", async (e) => {
   const btn = e.target.closest(".btn-vote[data-candidato]");
   if (!btn) return;
@@ -258,7 +248,7 @@ document.addEventListener("click", async (e) => {
     const fecha = fechaBonita();
 
     await registrarVoto({ cedula: usuario.cedula, nombre: usuario.nombre, candidato, ticketId, fecha });
-    mostrarTicket({ candidato, ticketId, fecha });
+    mostrarTicket(candidato, ticketId, fecha);
   } catch (err) {
     console.error(err);
     msg.textContent = "❌ No se pudo registrar el voto.";
@@ -272,7 +262,7 @@ document.addEventListener("click", async (e) => {
 
 btnNuevo.addEventListener("click", () => mostrarIngreso(true));
 
-// Panel responsable: importar afiliados
+// Importar afiliados
 btnImportarAfiliados.addEventListener("click", async () => {
   if (usuario.cedula !== CEDULA_RESPONSABLE) return;
 
@@ -296,7 +286,7 @@ btnImportarAfiliados.addEventListener("click", async () => {
   }
 });
 
-// Panel responsable: ver votos
+// Ver votos
 btnCargarVotos.addEventListener("click", async () => {
   if (usuario.cedula !== CEDULA_RESPONSABLE) return;
 
@@ -331,7 +321,7 @@ btnCargarVotos.addEventListener("click", async () => {
   }
 });
 
-// Descargar votos
+// Descargar votos CSV
 btnDescargarVotosCSV.addEventListener("click", () => {
   if (usuario.cedula !== CEDULA_RESPONSABLE) return;
 
