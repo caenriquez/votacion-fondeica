@@ -38,7 +38,7 @@
       </div>
     </div>
 
-    <!-- PASO 3: Ticket + Vista previa -->
+    <!-- PASO 3: Ticket + Vista previa (solo muestra, no botón WhatsApp) -->
     <div class="card hidden" id="panelTicket">
       <h2>Ticket de votación</h2>
 
@@ -52,13 +52,10 @@
       </div>
 
       <div class="card mini">
-        <h3 class="mini-title">Vista previa del mensaje</h3>
-        <textarea id="previewMsg" rows="6"></textarea>
-        <div class="actions">
-          <button id="btnEnviarWhats" class="btn btn-vote">Enviar por WhatsApp</button>
-        </div>
+        <h3 class="mini-title">Mensaje enviado a WhatsApp (vista previa)</h3>
+        <textarea id="previewMsg" rows="6" readonly></textarea>
         <p class="note">
-          Se abrirá WhatsApp/WhatsApp Web con el mensaje listo. Solo debes presionar <b>Enviar</b>.
+          WhatsApp se abre automáticamente con el mensaje listo. Solo debes presionar <b>Enviar</b>.
         </p>
       </div>
 
