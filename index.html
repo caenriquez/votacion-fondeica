@@ -11,19 +11,20 @@
   <div class="container">
     <h1>Votación FONDEICA</h1>
 
-    <!-- PASO 1: Ingreso -->
+    <!-- AFILIADO -->
     <div class="card" id="panelIngreso">
-      <label>Ingrese su Nombre y Apellido:</label>
-      <input id="nombre" placeholder="Ej: Juan Carlos Figueroa" />
-
-      <label>Ingrese su cédula:</label>
+      <label>Número de cédula:</label>
       <input id="cedula" placeholder="Ej: 1087200716" inputmode="numeric" />
 
-      <button id="btnIngresar" class="btn btn-primary">Ingresar</button>
-      <p id="msg" class="msg"></p>
+      <button id="btnBuscar" class="btn btn-primary">Ingresar</button>
+      <div class="msg" id="msg"></div>
+
+      <div class="mini hidden" id="boxNombre">
+        <div><b>Nombre:</b> <span id="nombreEncontrado"></span></div>
+      </div>
     </div>
 
-    <!-- PASO 2: Candidatos -->
+    <!-- CANDIDATOS -->
     <div class="card hidden" id="panelCandidatos">
       <h2>Candidatos</h2>
 
@@ -36,9 +37,11 @@
         <div><b>Cristian Arvey Enriquez</b></div>
         <button class="btn btn-vote" data-candidato="Cristian Arvey Enriquez">Votar</button>
       </div>
+
+      <button id="btnVolver" class="btn btn-ghost">Volver</button>
     </div>
 
-    <!-- PASO 3: Ticket + Vista previa (solo muestra, no botón WhatsApp) -->
+    <!-- TICKET -->
     <div class="card hidden" id="panelTicket">
       <h2>Ticket de votación</h2>
 
@@ -60,8 +63,57 @@
       </div>
 
       <div class="actions">
-        <button id="btnDescargarPDF" class="btn btn-primary">Descargar ticket (PDF)</button>
         <button id="btnNuevo" class="btn btn-ghost">Nuevo voto</button>
+      </div>
+    </div>
+
+    <!-- ADMIN LOGIN -->
+    <div class="card" id="panelAdminLogin">
+      <h2>Administrador</h2>
+      <label>Correo:</label>
+      <input id="adminEmail" placeholder="correo@dominio.com" />
+      <label>Contraseña:</label>
+      <input id="adminPass" type="password" placeholder="********" />
+      <button id="btnAdminLogin" class="btn btn-vote">Ingresar</button>
+      <div class="note" id="adminMsg"></div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div class="card hidden" id="panelAdmin">
+      <h2>Panel administrador</h2>
+      <div class="note">
+        <b>Tu UID:</b> <span id="adminUid"></span>
+        <br/>
+        (Crea en Firestore: <code>admins/TU_UID</code> con <code>ok:true</code> para habilitar lectura/exportación)
+      </div>
+
+      <!-- IMPORTADOR EXCEL -->
+      <div class="card mini">
+        <h3 class="mini-title">Importar afiliados (Excel .xlsx)</h3>
+        <input id="fileAfiliados" type="file" accept=".xlsx" />
+        <button id="btnImportarAfiliados" class="btn btn-primary">Importar afiliados</button>
+        <div class="note" id="importMsg"></div>
+      </div>
+
+      <div class="actions">
+        <button id="btnCargarVotos" class="btn btn-primary">Cargar votos</button>
+        <button id="btnDescargarVotosCSV" class="btn btn-vote">Descargar votos (Excel CSV)</button>
+        <button id="btnAdminSalir" class="btn btn-ghost">Salir</button>
+      </div>
+
+      <div class="tableWrap">
+        <table id="tablaVotos">
+          <thead>
+            <tr>
+              <th>Cédula</th>
+              <th>Nombre</th>
+              <th>Candidato</th>
+              <th>Fecha</th>
+              <th>Ticket</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
     </div>
 
@@ -70,8 +122,8 @@
     </div>
   </div>
 
-  <!-- PDF gratis -->
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <!-- Librería para leer Excel en el navegador (gratis) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script type="module" src="app.js"></script>
 </body>
