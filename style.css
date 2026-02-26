@@ -39,37 +39,40 @@ th, td { border:1px solid #e5e7eb; padding:8px; text-align:left; white-space:now
 th { background:#f3f4f6; }
 .footer { margin-top:14px; color:#6b7280; }
 
-/* Mejoras para celular */
-@media (max-width: 600px) {
-  body { font-size: 18px; }
-
-  .container {
-    max-width: 520px;     /* limita ancho para que no quede “estirado” */
-    margin: 18px auto;
-    padding: 0 14px;
-  }
-
-  h1 { font-size: 26px; text-align: center; }
-  h2 { font-size: 22px; }
-  label { font-size: 16px; }
-
-  input, textarea {
-    font-size: 18px;
-    padding: 14px 14px;
-  }
-
-  .btn {
-    width: 100%;
-    font-size: 18px;
-    padding: 14px 16px;
-  }
-
-  .card {
+/* FORZAR vista móvil centrada y más grande */
+@media (max-width: 900px) {
+  .container{
+    max-width: 520px;
+    margin: 0 auto;
     padding: 16px;
   }
 
-  /* Centrar el bloque principal de ingreso */
-  #panelIngreso { text-align: left; }
+  body{
+    font-size: 20px;
+  }
+
+  h1{
+    font-size: 30px;
+    text-align: center;
+    margin-top: 16px;
+  }
+
+  /* Card principal centrada y más “grande” */
+  .card{
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  input, textarea{
+    font-size: 20px;
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .btn{
+    width: 100%;
+    font-size: 20px;
+    padding: 16px;
+    border-radius: 12px;
+  }
 }
-
-
