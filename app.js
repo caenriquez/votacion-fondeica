@@ -1,17 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  collection,
-  getDocs,
-  deleteDoc,
-  serverTimestamp,
-  writeBatch
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-// ✅ Firebase config (tuyo)
+// ===== Firebase config =====
 const firebaseConfig = {
   apiKey: "AIzaSyDLSUgajTAG3aPEir4J7sBraZfLMHnDMU4",
   authDomain: "votacion-fondeica.firebaseapp.com",
@@ -21,58 +8,19 @@ const firebaseConfig = {
   appId: "1:150233243736:web:2be9dd6e4c050561c9ea2d"
 };
 
-// ✅ CAMBIA AQUÍ el número destino WhatsApp (57 + número, sin +, sin espacios)
-// Ej: 573116403643
+// ✅ CAMBIA AQUÍ el WhatsApp destino (57 + número, sin +)
 const WHATSAPP_DESTINO = "573116403643";
 
-// ✅ Tu cédula responsable (la única que ve panel de control y botones eliminar)
+// ✅ Tu cédula responsable
 const CEDULA_RESPONSABLE = "1087200716";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Init Firebase (compat)
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
+// Helpers
 const $ = (id) => document.getElementById(id);
-
-// Panels
-const panelIngreso = $("panelIngreso");
-const panelCandidatos = $("panelCandidatos");
-const panelTicket = $("panelTicket");
-const panelResponsable = $("panelResponsable");
-
-// Ingreso
-const cedulaInput = $("cedula");
-const btnBuscar = $("btnBuscar");
-const msg = $("msg");
-
-// Bienvenida
-const saludoTitulo = $("saludoTitulo");
-const saludoTexto = $("saludoTexto");
-const btnVolver = $("btnVolver");
-
-// Ticket
-const tTicket = $("tTicket");
-const tFecha = $("tFecha");
-const tTexto = $("tTexto");
-const tCedulaMask = $("tCedulaMask");
-const previewMsg = $("previewMsg");
-const btnNuevo = $("btnNuevo");
-
-// Responsable
-const fileAfiliados = $("fileAfiliados");
-const btnImportarAfiliados = $("btnImportarAfiliados");
-const importMsg = $("importMsg");
-const btnCargarVotos = $("btnCargarVotos");
-const btnDescargarVotosCSV = $("btnDescargarVotosCSV");
-const tablaVotosBody = $("tablaVotos").querySelector("tbody");
-
-let usuario = { cedula: "", nombre: "" };
-let ticketActual = { id: "", fecha: "", candidato: "" };
-let votosCache = [];
-
-// ---------- Utilidades ----------
-function normalizarCedula(v) {
-  return String(v || "").replace(/\D/g, "").trim();
-}
+const normalizarCedula = (v) => String(v || "").replace(/\D/g, "").trim();
 
 function maskCedula(cedula) {
   if (cedula.length <= 4) return "Cédula: ****";
@@ -104,7 +52,11 @@ function construirMensajeWhats(nombre, cedula, candidato, fecha) {
 
 function abrirWhatsApp(textoPlano) {
   const texto = encodeURIComponent(textoPlano);
-  window.open(`https://wa.me/${WHATSAPP_DESTINO}?text=${texto}`, "_blank");
+  const url = `https://wa.me/${WHATSAPP_DESTINO}?text=${texto}`;
+  // En móvil, mejor en la misma pestaña
+  const esMovil = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (esMovil) window.location.href = url;
+  else window.open(url, "_blank");
 }
 
 function downloadCSV(filename, rows) {
@@ -122,63 +74,88 @@ function downloadCSV(filename, rows) {
   URL.revokeObjectURL(url);
 }
 
-// ---------- Firestore ----------
+// DOM refs
+const panelIngreso = $("panelIngreso");
+const panelCandidatos = $("panelCandidatos");
+const panelTicket = $("panelTicket");
+const panelResponsable = $("panelResponsable");
+
+const cedulaInput = $("cedula");
+const btnBuscar = $("btnBuscar");
+const msg = $("msg");
+
+const saludoTitulo = $("saludoTitulo");
+const saludoTexto = $("saludoTexto");
+const btnVolver = $("btnVolver");
+
+const tTicket = $("tTicket");
+const tFecha = $("tFecha");
+const tTexto = $("tTexto");
+const tCedulaMask = $("tCedulaMask");
+const previewMsg = $("previewMsg");
+const btnNuevo = $("btnNuevo");
+
+const fileAfiliados = $("fileAfiliados");
+const btnImportarAfiliados = $("btnImportarAfiliados");
+const importMsg = $("importMsg");
+const btnCargarVotos = $("btnCargarVotos");
+const btnDescargarVotosCSV = $("btnDescargarVotosCSV");
+const tablaVotosBody = $("tablaVotos").querySelector("tbody");
+
+let usuario = { cedula: "", nombre: "" };
+let votosCache = [];
+
+// Firestore ops
 async function buscarAfiliado(cedula) {
-  const ref = doc(db, "afiliados", cedula);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return null;
+  const snap = await db.collection("afiliados").doc(cedula).get();
+  if (!snap.exists) return null;
   return snap.data(); // { nombre }
 }
 
-// Voto: docId = cedula
 async function registrarVoto({ cedula, nombre, candidato, ticketId, fecha }) {
-  const ref = doc(db, "votos", cedula);
-  await setDoc(ref, {
+  await db.collection("votos").doc(cedula).set({
     cedula,
     nombre,
     candidato,
     ticketId,
     fechaTexto: fecha,
-    createdAt: serverTimestamp()
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
 }
 
-// Importar afiliados desde Excel (tu archivo: B=cédula, C=nombre)
 async function importarAfiliadosDesdeXlsx(file) {
   const data = await file.arrayBuffer();
   const workbook = XLSX.read(data, { type: "array" });
   const ws = workbook.Sheets[workbook.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
 
+  // Batch en compat: usamos batch normal (500 max)
   let count = 0;
-  let batch = writeBatch(db);
+  let batch = db.batch();
   let ops = 0;
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     if (!row || row.length < 3) continue;
 
-    const ced = normalizarCedula(row[1]); // Columna B
-    const nom = String(row[2] || "").trim(); // Columna C
+    const ced = normalizarCedula(row[1]); // col B
+    const nom = String(row[2] || "").trim(); // col C
     if (!ced || !nom) continue;
 
-    batch.set(doc(db, "afiliados", ced), { nombre: nom }, { merge: true });
-
+    batch.set(db.collection("afiliados").doc(ced), { nombre: nom }, { merge: true });
     ops++;
     count++;
 
     if (ops >= 450) {
       await batch.commit();
-      batch = writeBatch(db);
+      batch = db.batch();
       ops = 0;
     }
   }
-
   if (ops > 0) await batch.commit();
   return count;
 }
 
-// ---------- Pantallas ----------
 function mostrarPanelCandidatos() {
   panelIngreso.classList.add("hidden");
   panelTicket.classList.add("hidden");
@@ -189,7 +166,6 @@ function mostrarIngreso(reset = false) {
   panelCandidatos.classList.add("hidden");
   panelTicket.classList.add("hidden");
   panelIngreso.classList.remove("hidden");
-
   if (reset) {
     cedulaInput.value = "";
     msg.textContent = "";
@@ -211,13 +187,10 @@ function mostrarTicket({ candidato, ticketId, fecha }) {
   panelCandidatos.classList.add("hidden");
   panelTicket.classList.remove("hidden");
 
-  // WhatsApp automático
   abrirWhatsApp(mensaje);
 }
 
-// ---------- Eventos ----------
-
-// Ingresar
+// Eventos
 btnBuscar.addEventListener("click", async () => {
   const cedula = normalizarCedula(cedulaInput.value);
 
@@ -227,13 +200,13 @@ btnBuscar.addEventListener("click", async () => {
     return;
   }
 
-  // Responsable entra SIEMPRE
+  // Responsable entra siempre
   if (cedula === CEDULA_RESPONSABLE) {
     usuario = { cedula, nombre: "Cristian (Responsable)" };
 
     saludoTitulo.textContent = "Hola, Cristian 👋";
     saludoTexto.textContent =
-      "Bienvenido(a). Puedes importar el Excel de afiliados, revisar votos y también votar.";
+      "Bienvenido(a). Puedes importar afiliados, revisar votos y también votar.";
 
     panelResponsable.classList.remove("hidden");
     msg.textContent = "";
@@ -241,13 +214,11 @@ btnBuscar.addEventListener("click", async () => {
     return;
   }
 
-  // Afiliado normal: debe existir en afiliados
   msg.textContent = "Buscando afiliado...";
   msg.style.color = "#111";
 
   try {
     const data = await buscarAfiliado(cedula);
-
     if (!data?.nombre) {
       msg.textContent = "❌ Esta cédula no está registrada en afiliados. (Primero importa el Excel).";
       msg.style.color = "#b42318";
@@ -266,16 +237,13 @@ btnBuscar.addEventListener("click", async () => {
     mostrarPanelCandidatos();
   } catch (e) {
     console.error(e);
-    msg.textContent = `❌ Error consultando afiliados: ${e?.code || ""} ${e?.message || e}`;
+    msg.textContent = "❌ Error consultando afiliados.";
     msg.style.color = "#b42318";
   }
 });
 
-btnVolver.addEventListener("click", () => {
-  mostrarIngreso(false);
-});
+btnVolver.addEventListener("click", () => mostrarIngreso(false));
 
-// Votar
 document.addEventListener("click", async (e) => {
   const btn = e.target.closest(".btn-vote[data-candidato]");
   if (!btn) return;
@@ -289,19 +257,11 @@ document.addEventListener("click", async (e) => {
     const ticketId = generarTicketId();
     const fecha = fechaBonita();
 
-    await registrarVoto({
-      cedula: usuario.cedula,
-      nombre: usuario.nombre,
-      candidato,
-      ticketId,
-      fecha
-    });
-
-    ticketActual = { id: ticketId, fecha, candidato };
+    await registrarVoto({ cedula: usuario.cedula, nombre: usuario.nombre, candidato, ticketId, fecha });
     mostrarTicket({ candidato, ticketId, fecha });
   } catch (err) {
     console.error(err);
-    msg.textContent = `❌ No se pudo registrar el voto: ${err?.code || ""} ${err?.message || err}`;
+    msg.textContent = "❌ No se pudo registrar el voto.";
     msg.style.color = "#b42318";
     mostrarIngreso(false);
   } finally {
@@ -310,12 +270,9 @@ document.addEventListener("click", async (e) => {
   }
 });
 
-// Nuevo voto
-btnNuevo.addEventListener("click", () => {
-  mostrarIngreso(true);
-});
+btnNuevo.addEventListener("click", () => mostrarIngreso(true));
 
-// Importar afiliados (solo visible para responsable)
+// Panel responsable: importar afiliados
 btnImportarAfiliados.addEventListener("click", async () => {
   if (usuario.cedula !== CEDULA_RESPONSABLE) return;
 
@@ -334,12 +291,12 @@ btnImportarAfiliados.addEventListener("click", async () => {
     importMsg.style.color = "#067647";
   } catch (e) {
     console.error(e);
-    importMsg.textContent = `❌ No se pudo importar: ${e?.code || ""} ${e?.message || e}`;
+    importMsg.textContent = "❌ No se pudo importar.";
     importMsg.style.color = "#b42318";
   }
 });
 
-// Ver votos (y mostrar botón Eliminar por fila si es responsable)
+// Panel responsable: ver votos
 btnCargarVotos.addEventListener("click", async () => {
   if (usuario.cedula !== CEDULA_RESPONSABLE) return;
 
@@ -347,13 +304,12 @@ btnCargarVotos.addEventListener("click", async () => {
   votosCache = [];
 
   try {
-    const snap = await getDocs(collection(db, "votos"));
+    const snap = await db.collection("votos").get();
     const rowsHtml = [];
 
     snap.forEach((docu) => {
       const v = docu.data();
       const ced = v.cedula || docu.id;
-
       votosCache.push(v);
 
       rowsHtml.push(`
@@ -368,23 +324,14 @@ btnCargarVotos.addEventListener("click", async () => {
       `);
     });
 
-    tablaVotosBody.innerHTML =
-      rowsHtml.length ? rowsHtml.join("") : "<tr><td colspan='6'>Sin votos</td></tr>";
+    tablaVotosBody.innerHTML = rowsHtml.length ? rowsHtml.join("") : "<tr><td colspan='6'>Sin votos</td></tr>";
   } catch (e) {
     console.error(e);
-    tablaVotosBody.innerHTML = `<tr><td colspan='6'>❌ Error cargando votos: ${e?.code || ""} ${e?.message || e}</td></tr>`;
+    tablaVotosBody.innerHTML = "<tr><td colspan='6'>❌ Error cargando votos</td></tr>";
   }
 });
 
-    tablaVotosBody.innerHTML =
-      rowsHtml.length ? rowsHtml.join("") : "<tr><td colspan='6'>Sin votos</td></tr>";
-  } catch (e) {
-    console.error(e);
-    tablaVotosBody.innerHTML = `<tr><td colspan='6'>❌ Error cargando votos: ${e?.code || ""} ${e?.message || e}</td></tr>`;
-  }
-});
-
-// Descargar votos CSV
+// Descargar votos
 btnDescargarVotosCSV.addEventListener("click", () => {
   if (usuario.cedula !== CEDULA_RESPONSABLE) return;
 
@@ -395,12 +342,11 @@ btnDescargarVotosCSV.addEventListener("click", () => {
   downloadCSV("votos_fondeica.csv", rows);
 });
 
-// ✅ Eliminar voto (1 por 1)
+// Eliminar voto
 document.addEventListener("click", async (e) => {
   const b = e.target.closest(".btnDel");
   if (!b) return;
 
-  // Solo responsable
   if (usuario.cedula !== CEDULA_RESPONSABLE) return;
 
   const ced = b.getAttribute("data-ced");
@@ -410,12 +356,11 @@ document.addEventListener("click", async (e) => {
   if (!ok) return;
 
   try {
-    await deleteDoc(doc(db, "votos", ced));
+    await db.collection("votos").doc(ced).delete();
     alert("✅ Voto eliminado.");
-    // refrescar tabla
     btnCargarVotos.click();
   } catch (err) {
     console.error(err);
-    alert(`❌ No se pudo eliminar: ${err?.code || ""} ${err?.message || err}`);
+    alert("❌ No se pudo eliminar.");
   }
 });
