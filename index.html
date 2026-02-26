@@ -38,11 +38,11 @@
       </div>
     </div>
 
-    <!-- PASO 3: Ticket -->
+    <!-- PASO 3: Ticket + Vista previa -->
     <div class="card hidden" id="panelTicket">
       <h2>Ticket de votación</h2>
 
-      <div id="ticketBox" class="ticket">
+      <div class="ticket">
         <div class="ticket-title">COMPROBANTE</div>
         <div class="ticket-row"><span>Ticket:</span> <b id="tTicket"></b></div>
         <div class="ticket-row"><span>Fecha:</span> <b id="tFecha"></b></div>
@@ -51,14 +51,21 @@
         <div class="ticket-small" id="tCedulaMask"></div>
       </div>
 
+      <div class="card mini">
+        <h3 class="mini-title">Vista previa del mensaje</h3>
+        <textarea id="previewMsg" rows="6"></textarea>
+        <div class="actions">
+          <button id="btnEnviarWhats" class="btn btn-vote">Enviar por WhatsApp</button>
+        </div>
+        <p class="note">
+          Se abrirá WhatsApp/WhatsApp Web con el mensaje listo. Solo debes presionar <b>Enviar</b>.
+        </p>
+      </div>
+
       <div class="actions">
         <button id="btnDescargarPDF" class="btn btn-primary">Descargar ticket (PDF)</button>
         <button id="btnNuevo" class="btn btn-ghost">Nuevo voto</button>
       </div>
-
-      <p class="note">
-        Nota: WhatsApp se abre automáticamente con el mensaje listo. Solo debes presionar <b>Enviar</b>.
-      </p>
     </div>
 
     <div class="footer">
@@ -66,10 +73,9 @@
     </div>
   </div>
 
-  <!-- Librería para PDF (gratis) -->
+  <!-- PDF gratis -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
-  <!-- Tu JS -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
