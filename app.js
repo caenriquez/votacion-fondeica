@@ -6,7 +6,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Tu Firebase config real
+// Firebase config (tuyo)
 const firebaseConfig = {
   apiKey: "AIzaSyDLSUgajTAG3aPEir4J7sBraZfLMHnDMU4",
   authDomain: "votacion-fondeica.firebaseapp.com",
@@ -15,6 +15,9 @@ const firebaseConfig = {
   messagingSenderId: "150233243736",
   appId: "1:150233243736:web:2be9dd6e4c050561c9ea2d"
 };
+
+// WhatsApp destino fijo (Colombia: 57 + 3116403643)
+const WHATSAPP_DESTINO = "573116403643";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -36,6 +39,9 @@ const tFecha = $("tFecha");
 const tTexto = $("tTexto");
 const tCedulaMask = $("tCedulaMask");
 
+// Preview + botones
+const previewMsg = $("previewMsg");
+const btnEnviarWhats = $("btnEnviarWhats");
 const btnDescargarPDF = $("btnDescargarPDF");
 const btnNuevo = $("btnNuevo");
 
@@ -69,7 +75,16 @@ function fechaBonita() {
   return d.toLocaleString("es-CO", { dateStyle: "medium", timeStyle: "short" });
 }
 
-// Guarda voto con docId = cédula (para bloquear repetidos)
+// Mensaje WhatsApp (SIN ticket)
+function construirMensajeWhats(nombre, cedula, candidato, fecha) {
+  return `Cordial saludo.\n` +
+         `Yo ${nombre}, identificado(a) con cédula de ciudadanía ${cedula}, ` +
+         `voto por ${candidato} como representante para la 61ª Asamblea Ordinaria de Delegados, ` +
+         `a realizarse el 14 de marzo de 2026.\n` +
+         `Fecha y hora del registro: ${fecha}`;
+}
+
+// Guarda voto con docId = cédula (bloquea repetidos con reglas)
 async function registrarVoto({ nombre, cedula, candidato, ticketId, fecha }) {
   const ref = doc(db, "votos", cedula);
   await setDoc(ref, {
@@ -93,13 +108,9 @@ function mostrarTicket({ nombre, cedula, candidato, ticketId, fecha }) {
   panelTicket.classList.remove("hidden");
 }
 
-// Abre WhatsApp (celular) o WhatsApp Web (PC) con mensaje prellenado
-function abrirWhatsApp(nombre, candidato, ticketId, fecha) {
-  const mensaje = `✅ Ticket ${ticketId}\nFecha: ${fecha}\nYo ${nombre}, voté por ${candidato}.`;
-  const texto = encodeURIComponent(mensaje);
-
-  // Número fijo destino (Colombia): 57 + 3116403643
-  window.open(`https://wa.me/573116403643?text=${texto}`, "_blank");
+function abrirWhatsAppConTexto(textoPlano) {
+  const texto = encodeURIComponent(textoPlano);
+  window.open(`https://wa.me/${WHATSAPP_DESTINO}?text=${texto}`, "_blank");
 }
 
 function descargarPDF() {
@@ -167,7 +178,7 @@ document.addEventListener("click", async (e) => {
 
     ticketActual = { id: ticketId, fecha, candidato };
 
-    // 1) Muestra el ticket
+    // Mostrar ticket en pantalla
     mostrarTicket({
       nombre: usuario.nombre,
       cedula: usuario.cedula,
@@ -176,8 +187,8 @@ document.addEventListener("click", async (e) => {
       fecha
     });
 
-    // 2) Abre WhatsApp automáticamente
-    abrirWhatsApp(usuario.nombre, candidato, ticketId, fecha);
+    // Mostrar vista previa (sin ticket)
+    previewMsg.value = construirMensajeWhats(usuario.nombre, usuario.cedula, candidato, fecha);
 
   } catch (err) {
     console.error(err);
@@ -193,6 +204,11 @@ document.addEventListener("click", async (e) => {
   }
 });
 
+// Enviar WhatsApp (con vista previa)
+btnEnviarWhats.addEventListener("click", () => {
+  abrirWhatsAppConTexto(previewMsg.value);
+});
+
 // Descargar PDF
 btnDescargarPDF.addEventListener("click", () => {
   descargarPDF();
@@ -206,6 +222,7 @@ btnNuevo.addEventListener("click", () => {
   $("nombre").value = "";
   $("cedula").value = "";
   msg.textContent = "";
+  previewMsg.value = "";
 
   panelTicket.classList.add("hidden");
   panelIngreso.classList.remove("hidden");
