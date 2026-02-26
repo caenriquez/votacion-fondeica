@@ -41,7 +41,6 @@ const tCedulaMask = $("tCedulaMask");
 
 // Preview + botones
 const previewMsg = $("previewMsg");
-const btnEnviarWhats = $("btnEnviarWhats");
 const btnDescargarPDF = $("btnDescargarPDF");
 const btnNuevo = $("btnNuevo");
 
@@ -110,6 +109,7 @@ function mostrarTicket({ nombre, cedula, candidato, ticketId, fecha }) {
 
 function abrirWhatsAppConTexto(textoPlano) {
   const texto = encodeURIComponent(textoPlano);
+  // Abre directamente al número fijo:
   window.open(`https://wa.me/${WHATSAPP_DESTINO}?text=${texto}`, "_blank");
 }
 
@@ -154,7 +154,7 @@ btnIngresar.addEventListener("click", () => {
   panelCandidatos.classList.remove("hidden");
 });
 
-// Votar
+// Votar -> guarda -> muestra ticket -> abre WhatsApp
 document.addEventListener("click", async (e) => {
   const btn = e.target.closest(".btn-vote[data-candidato]");
   if (!btn) return;
@@ -178,7 +178,6 @@ document.addEventListener("click", async (e) => {
 
     ticketActual = { id: ticketId, fecha, candidato };
 
-    // Mostrar ticket en pantalla
     mostrarTicket({
       nombre: usuario.nombre,
       cedula: usuario.cedula,
@@ -187,8 +186,12 @@ document.addEventListener("click", async (e) => {
       fecha
     });
 
-    // Mostrar vista previa (sin ticket)
-    previewMsg.value = construirMensajeWhats(usuario.nombre, usuario.cedula, candidato, fecha);
+    // Vista previa (solo mostrar)
+    const mensaje = construirMensajeWhats(usuario.nombre, usuario.cedula, candidato, fecha);
+    previewMsg.value = mensaje;
+
+    // Redirige a WhatsApp automáticamente
+    abrirWhatsAppConTexto(mensaje);
 
   } catch (err) {
     console.error(err);
@@ -202,11 +205,6 @@ document.addEventListener("click", async (e) => {
     btn.disabled = false;
     btn.textContent = "Votar";
   }
-});
-
-// Enviar WhatsApp (con vista previa)
-btnEnviarWhats.addEventListener("click", () => {
-  abrirWhatsAppConTexto(previewMsg.value);
 });
 
 // Descargar PDF
