@@ -168,6 +168,7 @@ document.addEventListener("click", async (e) => {
     ticketActual = { id: ticketId, fecha, candidato };
 
     mostrarTicket({
+      compartirWhatsApp(usuario.nombre, candidato, ticketId, fecha);
       nombre: usuario.nombre,
       cedula: usuario.cedula,
       candidato,
