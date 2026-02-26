@@ -175,6 +175,7 @@ document.addEventListener("click", async (e) => {
       ticketId,
       fecha
     });
+  compartirWhatsApp(usuario.nombre, candidato, ticketId, fecha);
  } catch (err) {
   console.error(err);
 
