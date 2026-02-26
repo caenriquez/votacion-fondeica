@@ -46,7 +46,7 @@ function construirMensajeWhats(nombre, cedula, candidato, fecha) {
     `Yo ${nombre}, identificado(a) con cédula de ciudadanía ${cedula}, ` +
     `voto por ${candidato} como representante para la 61ª Asamblea Ordinaria de Delegados, ` +
     "a realizarse el 14 de marzo de 2026.\n" +
-    `Fecha y hora del registro: ${fecha}`
+    `Atentamente`
   );
 }
 
