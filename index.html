@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 
-  
 <body>
   <div class="container">
     <h1>Votación FONDEICA</h1>
@@ -16,7 +15,6 @@
     <div class="card" id="panelIngreso">
       <label>Número de cédula:</label>
       <input id="cedula" placeholder="Ej: 1087200716" inputmode="numeric" />
-
       <button id="btnBuscar" class="btn btn-primary">Ingresar</button>
       <div class="msg" id="msg"></div>
     </div>
@@ -67,13 +65,13 @@
       </div>
     </div>
 
-    <!-- PANEL ESPECIAL (SOLO TU CÉDULA) -->
+    <!-- PANEL RESPONSABLE (solo tu cédula) -->
     <div class="card hidden" id="panelResponsable">
       <h2>Panel de control (Responsable)</h2>
-      <p class="note">Aquí puedes importar afiliados, ver quiénes han votado y descargar el listado.</p>
+      <p class="note">Importa afiliados, revisa votos y descarga el listado.</p>
 
       <div class="card mini">
-        <h3 class="mini-title">Importar afiliados desde Excel (.xlsx)</h3>
+        <h3 class="mini-title">Importar afiliados (Excel .xlsx)</h3>
         <input id="fileAfiliados" type="file" accept=".xlsx" />
         <button id="btnImportarAfiliados" class="btn btn-primary">Importar afiliados</button>
         <div id="importMsg" class="note"></div>
@@ -105,7 +103,7 @@
     </div>
   </div>
 
-  <!-- Leer Excel en el navegador -->
+  <!-- Librería para leer Excel en el navegador (gratis) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script type="module" src="app.js"></script>
