@@ -14,6 +14,7 @@ const WHATSAPP_DESTINO = "573113530039";
 // ✅ cédula responsable
 const CEDULA_RESPONSABLE = "1087200716";
 
+
 // Init Firebase (compat)
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
