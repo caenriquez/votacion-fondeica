@@ -1,78 +1,187 @@
 * { box-sizing: border-box; }
-body { font-family: Arial, Helvetica, sans-serif; margin: 0; background: #f6f7fb; color: #111; }
-.container { max-width: 980px; margin: 28px auto; padding: 0 14px; }
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: #f6f7fb;
+  color: #111;
+}
+
+.container {
+  max-width: 980px;
+  margin: 28px auto;
+  padding: 0 14px;
+}
+
 h1 { margin: 0 0 16px 0; }
 h2 { margin: 0 0 10px 0; }
 
-.card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin:12px 0; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+.card {
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:16px;
+  margin:12px 0;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+
 .hidden { display:none; }
 
-label { display:block; margin:10px 0 6px; font-weight:600; }
-input, textarea { width:100%; padding:10px 12px; border:1px solid #cfd5dd; border-radius:10px; outline:none; font-family:inherit; font-size:14px; }
+label {
+  display:block;
+  margin:10px 0 6px;
+  font-weight:600;
+}
+
+input, textarea {
+  width:100%;
+  padding:10px 12px;
+  border:1px solid #cfd5dd;
+  border-radius:10px;
+  outline:none;
+  font-family:inherit;
+  font-size:14px;
+}
+
 input:focus, textarea:focus { border-color:#5b8cff; }
 
-.btn { border:none; border-radius:10px; padding:10px 14px; cursor:pointer; font-weight:700; margin-top:10px; }
+.btn {
+  border:none;
+  border-radius:10px;
+  padding:10px 14px;
+  cursor:pointer;
+  font-weight:700;
+  margin-top:10px;
+}
+
 .btn-primary { background:#12a36a; color:#fff; }
 .btn-primary:hover { filter:brightness(.95); }
+
 .btn-vote { background:#0b61ff; color:#fff; }
 .btn-vote:hover { filter:brightness(.95); }
+
 .btn-ghost { background:#eef2ff; color:#111; }
 .btn-ghost:hover { filter:brightness(.98); }
 
 .msg { margin-top:10px; font-weight:700; }
 .note { margin-top:10px; color:#334155; }
 
-.candidate { display:flex; align-items:center; justify-content:space-between; border:1px solid #e5e7eb; border-radius:12px; padding:14px; margin:10px 0; }
+.candidate {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:14px;
+  margin:10px 0;
+}
 
-.ticket { border:2px dashed #cbd5e1; border-radius:14px; padding:16px; background:#fbfdff; }
-.ticket-title { font-weight:900; letter-spacing:1px; margin-bottom:10px; }
-.ticket-row { display:flex; justify-content:space-between; margin:6px 0; }
-.ticket-big { font-size:20px; font-weight:900; margin:10px 0 6px; }
-.ticket-small { color:#475569; font-weight:700; }
+.ticket {
+  border:2px dashed #cbd5e1;
+  border-radius:14px;
+  padding:16px;
+  background:#fbfdff;
+}
 
-.actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
-.mini { margin-top:12px; box-shadow:none; border:1px solid #e5e7eb; border-radius:12px; padding:12px; }
+.ticket-title {
+  font-weight:900;
+  letter-spacing:1px;
+  margin-bottom:10px;
+}
+
+.ticket-row {
+  display:flex;
+  justify-content:space-between;
+  margin:6px 0;
+}
+
+.ticket-big {
+  font-size:20px;
+  font-weight:900;
+  margin:10px 0 6px;
+}
+
+.ticket-small {
+  color:#475569;
+  font-weight:700;
+}
+
+.actions {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+
+.mini {
+  margin-top:12px;
+  box-shadow:none;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:12px;
+}
+
 .mini-title { margin:0 0 8px 0; }
+
 .tableWrap { overflow:auto; margin-top:12px; }
 table { width:100%; border-collapse:collapse; }
-th, td { border:1px solid #e5e7eb; padding:8px; text-align:left; white-space:nowrap; }
+th, td {
+  border:1px solid #e5e7eb;
+  padding:8px;
+  text-align:left;
+  white-space:nowrap;
+}
 th { background:#f3f4f6; }
+
 .footer { margin-top:14px; color:#6b7280; }
 
-/* FORZAR vista móvil centrada y más grande */
+/* ======================================================
+   MÓVIL: GRANDE + CENTRADO (APLICA EN CELULAR SEGURO)
+   ====================================================== */
 @media (max-width: 900px) {
-  .container{
-    max-width: 520px;
+  body { font-size: 20px; }
+
+  .container {
+    max-width: 560px;
     margin: 0 auto;
     padding: 16px;
   }
 
-  body{
-    font-size: 20px;
-  }
-
-  h1{
+  h1 {
     font-size: 30px;
     text-align: center;
-    margin-top: 16px;
+    margin: 18px 0 14px 0;
   }
 
-  /* Card principal centrada y más “grande” */
-  .card{
+  .card {
     padding: 18px;
+    border-radius: 16px;
+  }
+
+  label { font-size: 16px; }
+
+  input, textarea {
+    font-size: 20px;
+    padding: 16px;
     border-radius: 14px;
   }
 
-  input, textarea{
-    font-size: 20px;
-    padding: 16px;
-    border-radius: 12px;
-  }
-
-  .btn{
+  .btn {
     width: 100%;
     font-size: 20px;
     padding: 16px;
-    border-radius: 12px;
+    border-radius: 14px;
   }
+
+  .candidate {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  table { font-size: 13px; }
 }
