@@ -6,6 +6,7 @@ import {
   setDoc,
   collection,
   getDocs,
+  deleteDoc,
   serverTimestamp,
   writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -20,10 +21,11 @@ const firebaseConfig = {
   appId: "1:150233243736:web:2be9dd6e4c050561c9ea2d"
 };
 
-// ✅ WhatsApp destino fijo (3116403643 con indicativo 57)
+// ✅ CAMBIA AQUÍ el número destino WhatsApp (57 + número, sin +, sin espacios)
+// Ej: 573116403643
 const WHATSAPP_DESTINO = "573116403643";
 
-// ✅ Tu cédula responsable (la única que ve el panel de control)
+// ✅ Tu cédula responsable (la única que ve panel de control y botones eliminar)
 const CEDULA_RESPONSABLE = "1087200716";
 
 const app = initializeApp(firebaseConfig);
@@ -91,11 +93,13 @@ function fechaBonita() {
 }
 
 function construirMensajeWhats(nombre, cedula, candidato, fecha) {
-  return `Cordial saludo.\n` +
+  return (
+    "Cordial saludo.\n" +
     `Yo ${nombre}, identificado(a) con cédula de ciudadanía ${cedula}, ` +
     `voto por ${candidato} como representante para la 61ª Asamblea Ordinaria de Delegados, ` +
-    `a realizarse el 14 de marzo de 2026.\n` +
-    `Fecha y hora del registro: ${fecha}`;
+    "a realizarse el 14 de marzo de 2026.\n" +
+    `Fecha y hora del registro: ${fecha}`
+  );
 }
 
 function abrirWhatsApp(textoPlano) {
@@ -104,9 +108,9 @@ function abrirWhatsApp(textoPlano) {
 }
 
 function downloadCSV(filename, rows) {
-  const csv = rows.map(r =>
-    r.map(v => `"${String(v ?? "").replaceAll('"', '""')}"`).join(",")
-  ).join("\n");
+  const csv = rows
+    .map((r) => r.map((v) => `"${String(v ?? "").replaceAll('"', '""')}"`).join(","))
+    .join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -126,7 +130,7 @@ async function buscarAfiliado(cedula) {
   return snap.data(); // { nombre }
 }
 
-// Voto: docId = cedula (para evitar votos repetidos si Rules bloquean update)
+// Voto: docId = cedula
 async function registrarVoto({ cedula, nombre, candidato, ticketId, fecha }) {
   const ref = doc(db, "votos", cedula);
   await setDoc(ref, {
@@ -139,12 +143,11 @@ async function registrarVoto({ cedula, nombre, candidato, ticketId, fecha }) {
   });
 }
 
-// Importar afiliados desde Excel: tu archivo (B=cédula, C=nombre)
+// Importar afiliados desde Excel (tu archivo: B=cédula, C=nombre)
 async function importarAfiliadosDesdeXlsx(file) {
   const data = await file.arrayBuffer();
   const workbook = XLSX.read(data, { type: "array" });
-  const sheetName = workbook.SheetNames[0];
-  const ws = workbook.Sheets[sheetName];
+  const ws = workbook.Sheets[workbook.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
 
   let count = 0;
@@ -160,6 +163,7 @@ async function importarAfiliadosDesdeXlsx(file) {
     if (!ced || !nom) continue;
 
     batch.set(doc(db, "afiliados", ced), { nombre: nom }, { merge: true });
+
     ops++;
     count++;
 
@@ -181,10 +185,11 @@ function mostrarPanelCandidatos() {
   panelCandidatos.classList.remove("hidden");
 }
 
-function mostrarIngreso(reset=false) {
+function mostrarIngreso(reset = false) {
   panelCandidatos.classList.add("hidden");
   panelTicket.classList.add("hidden");
   panelIngreso.classList.remove("hidden");
+
   if (reset) {
     cedulaInput.value = "";
     msg.textContent = "";
@@ -212,7 +217,7 @@ function mostrarTicket({ candidato, ticketId, fecha }) {
 
 // ---------- Eventos ----------
 
-// Ingresar (buscar afiliado o entrar como responsable)
+// Ingresar
 btnBuscar.addEventListener("click", async () => {
   const cedula = normalizarCedula(cedulaInput.value);
 
@@ -222,14 +227,13 @@ btnBuscar.addEventListener("click", async () => {
     return;
   }
 
-  // ✅ Si es tu cédula, ENTRA sin depender de afiliados (para poder importar Excel)
+  // Responsable entra SIEMPRE
   if (cedula === CEDULA_RESPONSABLE) {
-    usuario = { cedula, nombre: "Responsable" };
+    usuario = { cedula, nombre: "Cristian (Responsable)" };
 
-    saludoTitulo.textContent = "Hola 👋";
+    saludoTitulo.textContent = "Hola, Cristian 👋";
     saludoTexto.textContent =
-      "Bienvenido(a) a las elecciones para el representante de la 61ª Asamblea Ordinaria de Delegados. " +
-      "Puedes votar y también usar el panel de control para importar afiliados y revisar votos.";
+      "Bienvenido(a). Puedes importar el Excel de afiliados, revisar votos y también votar.";
 
     panelResponsable.classList.remove("hidden");
     msg.textContent = "";
@@ -245,7 +249,7 @@ btnBuscar.addEventListener("click", async () => {
     const data = await buscarAfiliado(cedula);
 
     if (!data?.nombre) {
-      msg.textContent = "❌ Esta cédula no está registrada en el listado de afiliados. (Primero importa el Excel).";
+      msg.textContent = "❌ Esta cédula no está registrada en afiliados. (Primero importa el Excel).";
       msg.style.color = "#b42318";
       return;
     }
@@ -255,12 +259,11 @@ btnBuscar.addEventListener("click", async () => {
     saludoTitulo.textContent = `Hola, ${usuario.nombre} 👋`;
     saludoTexto.textContent =
       "Bienvenido(a) a las elecciones para el representante de la 61ª Asamblea Ordinaria de Delegados. " +
-      "Por favor selecciona tu candidato y registra tu voto.";
+      "Selecciona tu candidato y registra tu voto.";
 
     panelResponsable.classList.add("hidden");
     msg.textContent = "";
     mostrarPanelCandidatos();
-
   } catch (e) {
     console.error(e);
     msg.textContent = `❌ Error consultando afiliados: ${e?.code || ""} ${e?.message || e}`;
@@ -296,7 +299,6 @@ document.addEventListener("click", async (e) => {
 
     ticketActual = { id: ticketId, fecha, candidato };
     mostrarTicket({ candidato, ticketId, fecha });
-
   } catch (err) {
     console.error(err);
     msg.textContent = `❌ No se pudo registrar el voto: ${err?.code || ""} ${err?.message || err}`;
@@ -313,8 +315,10 @@ btnNuevo.addEventListener("click", () => {
   mostrarIngreso(true);
 });
 
-// Panel responsable: Importar afiliados
+// Importar afiliados (solo visible para responsable)
 btnImportarAfiliados.addEventListener("click", async () => {
+  if (usuario.cedula !== CEDULA_RESPONSABLE) return;
+
   if (!fileAfiliados.files || !fileAfiliados.files[0]) {
     importMsg.textContent = "❌ Selecciona el Excel (.xlsx) primero.";
     importMsg.style.color = "#b42318";
@@ -335,41 +339,77 @@ btnImportarAfiliados.addEventListener("click", async () => {
   }
 });
 
-// Panel responsable: Ver votos
+// Ver votos (y mostrar botón Eliminar por fila si es responsable)
 btnCargarVotos.addEventListener("click", async () => {
-  tablaVotosBody.innerHTML = "<tr><td colspan='5'>Cargando...</td></tr>";
+  if (usuario.cedula !== CEDULA_RESPONSABLE) return;
+
+  tablaVotosBody.innerHTML = "<tr><td colspan='6'>Cargando...</td></tr>";
   votosCache = [];
 
   try {
     const snap = await getDocs(collection(db, "votos"));
-    const rows = [];
+    const rowsHtml = [];
 
-    snap.forEach(docu => {
+    snap.forEach((docu) => {
       const v = docu.data();
+      const ced = v.cedula || docu.id;
+
       votosCache.push(v);
-      rows.push(`
+
+      rowsHtml.push(`
         <tr>
-          <td>${v.cedula || docu.id}</td>
+          <td>${ced}</td>
           <td>${v.nombre || ""}</td>
           <td>${v.candidato || ""}</td>
           <td>${v.fechaTexto || ""}</td>
           <td>${v.ticketId || ""}</td>
+          <td>
+            <button class="btn btn-ghost btnDel" data-ced="${ced}">Eliminar</button>
+          </td>
         </tr>
       `);
     });
 
-    tablaVotosBody.innerHTML = rows.length ? rows.join("") : "<tr><td colspan='5'>Sin votos</td></tr>";
+    tablaVotosBody.innerHTML =
+      rowsHtml.length ? rowsHtml.join("") : "<tr><td colspan='6'>Sin votos</td></tr>";
   } catch (e) {
     console.error(e);
-    tablaVotosBody.innerHTML = `<tr><td colspan='5'>❌ Error cargando votos: ${e?.code || ""} ${e?.message || e}</td></tr>`;
+    tablaVotosBody.innerHTML = `<tr><td colspan='6'>❌ Error cargando votos: ${e?.code || ""} ${e?.message || e}</td></tr>`;
   }
 });
 
-// Panel responsable: Descargar votos CSV
+// Descargar votos CSV
 btnDescargarVotosCSV.addEventListener("click", () => {
+  if (usuario.cedula !== CEDULA_RESPONSABLE) return;
+
   const rows = [
     ["Cedula", "Nombre", "Candidato", "Fecha", "Ticket"],
-    ...votosCache.map(v => [v.cedula || "", v.nombre || "", v.candidato || "", v.fechaTexto || "", v.ticketId || ""])
+    ...votosCache.map((v) => [v.cedula || "", v.nombre || "", v.candidato || "", v.fechaTexto || "", v.ticketId || ""])
   ];
   downloadCSV("votos_fondeica.csv", rows);
+});
+
+// ✅ Eliminar voto (1 por 1)
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest(".btnDel");
+  if (!b) return;
+
+  // Solo responsable
+  if (usuario.cedula !== CEDULA_RESPONSABLE) return;
+
+  const ced = b.getAttribute("data-ced");
+  if (!ced) return;
+
+  const ok = confirm(`¿Seguro que deseas eliminar el voto de la cédula ${ced}?`);
+  if (!ok) return;
+
+  try {
+    await deleteDoc(doc(db, "votos", ced));
+    alert("✅ Voto eliminado.");
+    // refrescar tabla
+    btnCargarVotos.click();
+  } catch (err) {
+    console.error(err);
+    alert(`❌ No se pudo eliminar: ${err?.code || ""} ${err?.message || err}`);
+  }
 });
