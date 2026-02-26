@@ -6,6 +6,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// Tu Firebase config real
 const firebaseConfig = {
   apiKey: "AIzaSyDLSUgajTAG3aPEir4J7sBraZfLMHnDMU4",
   authDomain: "votacion-fondeica.firebaseapp.com",
@@ -35,7 +36,6 @@ const tFecha = $("tFecha");
 const tTexto = $("tTexto");
 const tCedulaMask = $("tCedulaMask");
 
-const btnCompartirWhats = $("btnCompartirWhats");
 const btnDescargarPDF = $("btnDescargarPDF");
 const btnNuevo = $("btnNuevo");
 
@@ -56,7 +56,6 @@ function maskCedula(cedula) {
 }
 
 function generarTicketId() {
-  // Ej: FND-20260301-8K2Q9A
   const d = new Date();
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -70,7 +69,7 @@ function fechaBonita() {
   return d.toLocaleString("es-CO", { dateStyle: "medium", timeStyle: "short" });
 }
 
-// Guarda voto (1 voto por cédula: si repite, Firestore lo considera update y reglas lo bloquean)
+// Guarda voto con docId = cédula (para bloquear repetidos)
 async function registrarVoto({ nombre, cedula, candidato, ticketId, fecha }) {
   const ref = doc(db, "votos", cedula);
   await setDoc(ref, {
@@ -94,11 +93,10 @@ function mostrarTicket({ nombre, cedula, candidato, ticketId, fecha }) {
   panelTicket.classList.remove("hidden");
 }
 
-function compartirWhatsApp(nombre, candidato, ticketId, fecha) {
+// Abre WhatsApp (celular) o WhatsApp Web (PC) con mensaje prellenado
+function abrirWhatsApp(nombre, candidato, ticketId, fecha) {
   const mensaje = `✅ Ticket ${ticketId}\nFecha: ${fecha}\nYo ${nombre}, voté por ${candidato}.`;
   const texto = encodeURIComponent(mensaje);
-
-  // Abre WhatsApp (celular) o WhatsApp Web (PC)
   window.open(`https://api.whatsapp.com/send?text=${texto}`, "_blank");
 }
 
@@ -167,38 +165,30 @@ document.addEventListener("click", async (e) => {
 
     ticketActual = { id: ticketId, fecha, candidato };
 
+    // 1) Muestra el ticket
     mostrarTicket({
-      compartirWhatsApp(usuario.nombre, candidato, ticketId, fecha);
       nombre: usuario.nombre,
       cedula: usuario.cedula,
       candidato,
       ticketId,
       fecha
     });
-  compartirWhatsApp(usuario.nombre, candidato, ticketId, fecha);
- } catch (err) {
-  console.error(err);
 
-  // Cuando ya existe el documento, Firestore bloquea por reglas -> permission-denied
-  msg.textContent = "❌ Esta cédula ya registró un voto. No es posible votar de nuevo.";
-  msg.style.color = "#b42318";
+    // 2) Abre WhatsApp automáticamente
+    abrirWhatsApp(usuario.nombre, candidato, ticketId, fecha);
 
-  panelIngreso.classList.remove("hidden");
-  panelCandidatos.classList.add("hidden");
-  panelTicket.classList.add("hidden");
-}
+  } catch (err) {
+    console.error(err);
+    msg.textContent = "❌ Esta cédula ya registró un voto. No es posible votar de nuevo.";
+    msg.style.color = "#b42318";
 
     panelIngreso.classList.remove("hidden");
     panelCandidatos.classList.add("hidden");
+    panelTicket.classList.add("hidden");
   } finally {
     btn.disabled = false;
     btn.textContent = "Votar";
   }
-});
-
-// Compartir WhatsApp
-btnCompartirWhats.addEventListener("click", () => {
-  compartirWhatsApp(usuario.nombre, ticketActual.candidato, ticketActual.id, ticketActual.fecha);
 });
 
 // Descargar PDF
@@ -208,7 +198,6 @@ btnDescargarPDF.addEventListener("click", () => {
 
 // Nuevo voto
 btnNuevo.addEventListener("click", () => {
-  // reset
   usuario = { nombre: "", cedula: "" };
   ticketActual = { id: "", fecha: "", candidato: "" };
 
