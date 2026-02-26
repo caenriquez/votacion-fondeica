@@ -74,6 +74,7 @@ input:focus, textarea:focus { border-color:#5b8cff; }
   border-radius:12px;
   padding:14px;
   margin:10px 0;
+  gap: 10px;
 }
 
 .ticket {
@@ -83,35 +84,12 @@ input:focus, textarea:focus { border-color:#5b8cff; }
   background:#fbfdff;
 }
 
-.ticket-title {
-  font-weight:900;
-  letter-spacing:1px;
-  margin-bottom:10px;
-}
+.ticket-title { font-weight:900; letter-spacing:1px; margin-bottom:10px; }
+.ticket-row { display:flex; justify-content:space-between; margin:6px 0; }
+.ticket-big { font-size:20px; font-weight:900; margin:10px 0 6px; }
+.ticket-small { color:#475569; font-weight:700; }
 
-.ticket-row {
-  display:flex;
-  justify-content:space-between;
-  margin:6px 0;
-}
-
-.ticket-big {
-  font-size:20px;
-  font-weight:900;
-  margin:10px 0 6px;
-}
-
-.ticket-small {
-  color:#475569;
-  font-weight:700;
-}
-
-.actions {
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:8px;
-}
+.actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
 
 .mini {
   margin-top:12px;
@@ -135,70 +113,11 @@ th { background:#f3f4f6; }
 
 .footer { margin-top:14px; color:#6b7280; }
 
-/* ======================================================
-   MÓVIL: GRANDE + CENTRADO (APLICA EN CELULAR SEGURO)
-   ====================================================== */
-@media (max-width: 900px) {
-  body { font-size: 20px; }
-
-  .container {
-    max-width: 560px;
-    margin: 0 auto;
-    padding: 16px;
-  }
-
-  h1 {
-    font-size: 30px;
-    text-align: center;
-    margin: 18px 0 14px 0;
-  }
-
-  .card {
-    padding: 18px;
-    border-radius: 16px;
-  }
-
-  label { font-size: 16px; }
-
-  input, textarea {
-    font-size: 20px;
-    padding: 16px;
-    border-radius: 14px;
-  }
-
-  .btn {
-    width: 100%;
-    font-size: 20px;
-    padding: 16px;
-    border-radius: 14px;
-  }
-
-  .candidate {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .actions {
-    flex-direction: column;
-  }
-
-  table { font-size: 13px; }
-}
-
-/* Forzar que el formulario de ingreso se vea más grande en celular */
-#panelIngreso { 
-  transform: scale(1.15); 
-  transform-origin: top left; 
-}
 /* ==========================
-   MODO CELULAR: TODO GRANDE
+   MÓVIL: TODO GRANDE
    ========================== */
 @media (max-width: 900px) {
-
-  body {
-    font-size: 22px;              /* tamaño base */
-  }
+  body { font-size: 22px; }
 
   .container {
     max-width: 600px;
@@ -212,28 +131,20 @@ th { background:#f3f4f6; }
     margin: 18px 0 12px 0;
   }
 
-  h2 {
-    font-size: 28px;
-  }
+  h2 { font-size: 28px; }
+  label { font-size: 20px; }
 
-  label {
-    font-size: 20px;
-  }
-
-  /* tarjetas más grandes */
   .card {
     padding: 20px;
     border-radius: 16px;
   }
 
-  /* inputs y textarea grandes */
   input, textarea {
     font-size: 22px;
     padding: 18px 18px;
     border-radius: 14px;
   }
 
-  /* botones grandes y a todo ancho */
   .btn {
     width: 100%;
     font-size: 22px;
@@ -241,7 +152,6 @@ th { background:#f3f4f6; }
     border-radius: 14px;
   }
 
-  /* candidatos: apilar y botón grande */
   .candidate {
     flex-direction: column;
     align-items: stretch;
@@ -249,19 +159,9 @@ th { background:#f3f4f6; }
     padding: 18px;
   }
 
-  /* ticket y texto grande */
-  .ticket-big {
-    font-size: 24px;
-  }
+  .ticket-big { font-size: 24px; }
 
-  /* acciones en columna */
-  .actions {
-    flex-direction: column;
-  }
+  .actions { flex-direction: column; }
 
-  /* tabla más legible */
-  table {
-    font-size: 16px;
-  }
+  table { font-size: 16px; }
 }
-
