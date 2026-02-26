@@ -65,7 +65,7 @@
       </div>
     </div>
 
-    <!-- PANEL RESPONSABLE (solo tu cédula) -->
+    <!-- PANEL RESPONSABLE -->
     <div class="card hidden" id="panelResponsable">
       <h2>Panel de control (Responsable)</h2>
       <p class="note">Importa afiliados, revisa votos y descarga el listado.</p>
@@ -104,9 +104,14 @@
     </div>
   </div>
 
-  <!-- Librería para leer Excel en el navegador (gratis) -->
+  <!-- XLSX -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-  <script type="module" src="app.js?v=10"></script>
+  <!-- Firebase COMPAT (sin módulos, más compatible móvil) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <!-- Tu JS (forzamos recarga con v=1) -->
+  <script src="app.js?v=1"></script>
 </body>
 </html>
