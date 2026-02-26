@@ -97,7 +97,9 @@ function mostrarTicket({ nombre, cedula, candidato, ticketId, fecha }) {
 function abrirWhatsApp(nombre, candidato, ticketId, fecha) {
   const mensaje = `✅ Ticket ${ticketId}\nFecha: ${fecha}\nYo ${nombre}, voté por ${candidato}.`;
   const texto = encodeURIComponent(mensaje);
-  window.open(`https://api.whatsapp.com/send?text=${texto}`, "_blank");
+
+  // Número fijo destino (Colombia): 57 + 3116403643
+  window.open(`https://wa.me/573116403643?text=${texto}`, "_blank");
 }
 
 function descargarPDF() {
